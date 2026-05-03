@@ -176,14 +176,19 @@ $actividades = [];
 $estudiantes = [];
 $asignacion_actual = null;
 
+// Actividades de la asignación seleccionada
 if ($id_asignacion) {
     $asignacion_actual = current(array_filter($asignaciones, fn($a) => $a['id'] == $id_asignacion));
     
-    // Actividades
-    $query = "SELECT a.*, COUNT(DISTINCT ea.id_matricula) as entregas, AVG(ea.nota_obtenida) as promedio
+    // ✅ CONSULTA CORREGIDA: Usar ea.id_matricula
+    $query = "SELECT a.*, 
+              COUNT(DISTINCT ea.id_matricula) as entregas, 
+              AVG(ea.nota_obtenida) as promedio
               FROM tbl_actividad a
               LEFT JOIN tbl_entrega_actividad ea ON a.id = ea.id_actividad
-              WHERE a.id_asignacion_docente = :asig AND a.estado IN ('publicado','activo','programado')";
+              WHERE a.id_asignacion_docente = :asig 
+              AND a.estado IN ('publicado','activo','programado')";
+    
     $params = [':asig' => $id_asignacion];
     
     if ($filtro_tipo !== 'todos') {
@@ -197,7 +202,7 @@ if ($id_asignacion) {
     $stmt->execute();
     $actividades = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Estudiantes
+    // Estudiantes (esta consulta ya es correcta)
     $stmt = $db->prepare("SELECT e.id, CONCAT(p.primer_nombre, ' ', p.primer_apellido) as nombre, p.email, e.nie
                           FROM tbl_matricula m
                           JOIN tbl_estudiante e ON m.id_estudiante = e.id
