@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 24-04-2026 a las 21:57:58
+-- Tiempo de generación: 03-05-2026 a las 06:07:10
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -37,7 +37,7 @@ CREATE TABLE `tbl_actividad` (
   `descripcion` text DEFAULT NULL,
   `fecha_programada` datetime DEFAULT NULL,
   `fecha_limite` datetime DEFAULT NULL,
-  `duracion_minutos` time NOT NULL,
+  `duracion_minutos` time DEFAULT NULL,
   `nota_maxima` decimal(4,2) DEFAULT NULL,
   `recursos_url` varchar(255) DEFAULT NULL,
   `estado` enum('programado','activo','cerrado') DEFAULT 'programado',
@@ -53,7 +53,9 @@ INSERT INTO `tbl_actividad` (`id`, `id_asignacion_docente`, `tipo`, `contenido`,
 (9, 3, '', 'ok2', '', 'ok2', 'ok2', '2026-04-05 01:02:50', NULL, '00:00:00', NULL, '', '', '2026-04-04 23:02:50', '2026-04-04 23:02:50'),
 (10, 3, '', 'ok3', '', 'ok', 'ok3', '2026-04-05 02:11:39', NULL, '00:00:00', NULL, '', '', '2026-04-05 00:11:39', '2026-04-05 00:11:39'),
 (11, 3, '', 'ok', '', 'Noticia de ultima hora', 'ok', '2026-04-05 03:07:45', NULL, '00:00:00', NULL, '', '', '2026-04-05 01:07:45', '2026-04-05 01:07:45'),
-(12, 3, '', 'ok', NULL, 'ok', 'ok', '2026-04-06 06:14:52', NULL, '00:00:00', NULL, '', '', '2026-04-06 04:14:52', '2026-04-06 04:14:52');
+(12, 3, '', 'ok', NULL, 'ok', 'ok', '2026-04-06 06:14:52', NULL, '00:00:00', NULL, '', '', '2026-04-06 04:14:52', '2026-04-06 04:14:52'),
+(13, 3, 'tarea', '', NULL, 'partes de la pc', 'partes de la pc', '2026-05-02 17:01:00', '2026-05-08 17:01:00', NULL, 10.00, '', '', '2026-05-02 17:01:51', '2026-05-02 17:01:51'),
+(14, 3, 'examen', '', NULL, 'fgfgfgfgfgfgffg', 'fdfdfdfdfdfdfdf', '2026-05-02 17:02:00', '2026-05-22 11:03:00', NULL, 10.00, '', '', '2026-05-02 17:03:18', '2026-05-02 17:03:18');
 
 -- --------------------------------------------------------
 
@@ -89,16 +91,18 @@ INSERT INTO `tbl_asignacion_docente` (`id`, `id_profesor`, `id_asignatura`, `id_
 CREATE TABLE `tbl_asignatura` (
   `id` int(11) NOT NULL,
   `nombre` varchar(100) DEFAULT NULL,
-  `codigo` varchar(20) DEFAULT NULL
+  `codigo` varchar(20) DEFAULT NULL,
+  `id_institucion` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `tbl_asignatura`
 --
 
-INSERT INTO `tbl_asignatura` (`id`, `nombre`, `codigo`) VALUES
-(1, 'Informática', 'INF-127'),
-(2, 'INGLES 2026', 'ING-290');
+INSERT INTO `tbl_asignatura` (`id`, `nombre`, `codigo`, `id_institucion`) VALUES
+(1, 'Informática', 'INF-127', NULL),
+(2, 'INGLES 2026', 'ING-290', NULL),
+(3, 'MATEMATICA', 'MAT001', NULL);
 
 -- --------------------------------------------------------
 
@@ -210,6 +214,20 @@ CREATE TABLE `tbl_calendario_evaluacion` (
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `tbl_chat_clase`
+--
+
+CREATE TABLE `tbl_chat_clase` (
+  `id` int(11) NOT NULL,
+  `id_asignacion` int(11) NOT NULL,
+  `id_usuario` int(11) NOT NULL,
+  `mensaje` text NOT NULL,
+  `fecha_envio` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `tbl_config_examen`
 --
 
@@ -263,16 +281,46 @@ CREATE TABLE `tbl_estudiante` (
   `estado_familiar` varchar(50) DEFAULT NULL,
   `discapacidad` varchar(100) DEFAULT NULL,
   `trabaja` tinyint(1) DEFAULT 0,
-  `estado` enum('activo','inactivo') NOT NULL DEFAULT 'activo'
+  `estado` enum('activo','inactivo') NOT NULL DEFAULT 'activo',
+  `id_institucion` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `tbl_estudiante`
 --
 
-INSERT INTO `tbl_estudiante` (`id`, `id_persona`, `nie`, `estado_familiar`, `discapacidad`, `trabaja`, `estado`) VALUES
-(1, 6, '00010', '', 'Ninguna', 0, 'activo'),
-(6, 14, '100002026', '', 'Ninguna', 0, 'activo');
+INSERT INTO `tbl_estudiante` (`id`, `id_persona`, `nie`, `estado_familiar`, `discapacidad`, `trabaja`, `estado`, `id_institucion`) VALUES
+(1, 6, '00010', '', 'Ninguna', 0, 'activo', NULL),
+(6, 14, '100002026', '', 'Ninguna', 0, 'activo', NULL),
+(7, 15, '8888888', '', 'Ninguna', 0, 'activo', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `tbl_examen`
+--
+
+CREATE TABLE `tbl_examen` (
+  `id` int(11) NOT NULL,
+  `id_asignacion_docente` int(11) NOT NULL,
+  `titulo` varchar(200) NOT NULL,
+  `descripcion` text DEFAULT NULL,
+  `instrucciones` text DEFAULT NULL,
+  `duracion_minutos` int(11) DEFAULT 60,
+  `nota_maxima` decimal(5,2) DEFAULT 10.00,
+  `fecha_programada` datetime DEFAULT NULL,
+  `fecha_limite` datetime DEFAULT NULL,
+  `fecha_inicio` datetime DEFAULT NULL,
+  `fecha_fin` datetime DEFAULT NULL,
+  `intento_maximo` int(11) DEFAULT 1,
+  `mezclar_preguntas` tinyint(1) DEFAULT 0,
+  `mezclar_opciones` tinyint(1) DEFAULT 0,
+  `mostrar_resultados` tinyint(1) DEFAULT 1,
+  `permitir_revision` tinyint(1) DEFAULT 1,
+  `estado` enum('borrador','programado','activo','cerrado','eliminado') DEFAULT 'borrador',
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -298,17 +346,19 @@ CREATE TABLE `tbl_grado` (
   `id` int(11) NOT NULL,
   `nombre` varchar(250) DEFAULT NULL,
   `nivel` enum('basica','bachillerato') NOT NULL,
-  `nota_minima_aprobacion` decimal(3,1) NOT NULL
+  `nota_minima_aprobacion` decimal(3,1) NOT NULL,
+  `id_institucion` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `tbl_grado`
 --
 
-INSERT INTO `tbl_grado` (`id`, `nombre`, `nivel`, `nota_minima_aprobacion`) VALUES
-(1, 'Septimo', 'basica', 6.0),
-(2, 'Octavo', 'basica', 6.0),
-(4, 'Quinto', 'basica', 6.0);
+INSERT INTO `tbl_grado` (`id`, `nombre`, `nivel`, `nota_minima_aprobacion`, `id_institucion`) VALUES
+(1, 'Septimo', 'basica', 6.0, NULL),
+(2, 'Octavo', 'basica', 6.0, NULL),
+(4, 'Quinto', 'basica', 6.0, NULL),
+(5, 'Segundo', 'basica', 6.0, NULL);
 
 -- --------------------------------------------------------
 
@@ -493,21 +543,44 @@ CREATE TABLE `tbl_ingles_vocabulario` (
 
 CREATE TABLE `tbl_institucion` (
   `id` int(11) NOT NULL,
+  `subdominio` varchar(50) DEFAULT NULL,
   `nombre_ce` varchar(200) NOT NULL,
   `direccion` varchar(255) DEFAULT NULL,
   `departamento` varchar(100) DEFAULT NULL,
   `municipio` varchar(100) DEFAULT NULL,
   `telefono` varchar(20) DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
-  `codigo_infra` varchar(50) DEFAULT NULL
+  `codigo_infra` varchar(50) DEFAULT NULL,
+  `estado` enum('activo','inactivo') DEFAULT 'activo'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `tbl_institucion`
 --
 
-INSERT INTO `tbl_institucion` (`id`, `nombre_ce`, `direccion`, `departamento`, `municipio`, `telefono`, `email`, `codigo_infra`) VALUES
-(1, 'Institución por Defecto', 'Dirección Temporal', 'San Salvador', 'San Salvador', '0000-0000', 'default@institucion.edu.sv', NULL);
+INSERT INTO `tbl_institucion` (`id`, `subdominio`, `nombre_ce`, `direccion`, `departamento`, `municipio`, `telefono`, `email`, `codigo_infra`, `estado`) VALUES
+(1, NULL, 'Institución por Defecto', 'Dirección Temporal', 'San Salvador', 'San Salvador', '0000-0000', 'default@institucion.edu.sv', NULL, 'activo'),
+(2, 'admin', 'Plataforma Global', NULL, NULL, NULL, NULL, NULL, NULL, 'activo'),
+(4, 'colegio1', 'Colegio de El Salvador', 'San Salvador', 'San Salvador', 'San Salvador Centro', NULL, NULL, '11000', 'activo');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `tbl_intento_examen`
+--
+
+CREATE TABLE `tbl_intento_examen` (
+  `id` int(11) NOT NULL,
+  `id_examen` int(11) NOT NULL,
+  `id_estudiante` int(11) NOT NULL,
+  `id_matricula` int(11) NOT NULL,
+  `fecha_inicio` datetime DEFAULT current_timestamp(),
+  `fecha_fin` datetime DEFAULT NULL,
+  `puntaje_obtenido` decimal(5,2) DEFAULT 0.00,
+  `porcentaje` decimal(5,2) DEFAULT 0.00,
+  `estado` enum('en_progreso','entregado','calificado') DEFAULT 'en_progreso',
+  `tiempo_usado` int(11) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -602,7 +675,18 @@ INSERT INTO `tbl_logs_actividad` (`id`, `id_usuario`, `accion`, `fecha_hora`, `i
 (144, 16, 'Login Exitoso', '2026-04-22 15:05:05', '::1'),
 (145, 16, 'Login Exitoso', '2026-04-22 15:28:01', '::1'),
 (146, 16, 'Login Exitoso', '2026-04-22 21:28:59', '::1'),
-(147, 16, 'Login Exitoso', '2026-04-23 08:36:00', '::1');
+(147, 16, 'Login Exitoso', '2026-04-23 08:36:00', '::1'),
+(148, 16, 'Login Exitoso', '2026-04-26 11:07:21', '::1'),
+(149, 15, 'Login Exitoso', '2026-04-26 11:09:48', '::1'),
+(150, 16, 'Login Exitoso', '2026-05-02 10:40:15', '::1'),
+(151, 24, 'Login Exitoso', '2026-05-02 10:52:00', '::1'),
+(152, 15, 'Login Exitoso', '2026-05-02 10:53:13', '::1'),
+(153, 15, 'Login Exitoso', '2026-05-02 11:10:18', '::1'),
+(154, 16, 'Login Exitoso', '2026-05-02 11:14:43', '::1'),
+(155, 15, 'Login Exitoso', '2026-05-02 11:27:59', '::1'),
+(156, 16, 'Login Exitoso', '2026-05-02 11:28:38', '::1'),
+(157, 15, 'Login Exitoso', '2026-05-02 11:30:42', '::1'),
+(158, 15, 'Login Exitoso', '2026-05-02 14:51:28', '::1');
 
 -- --------------------------------------------------------
 
@@ -626,7 +710,8 @@ CREATE TABLE `tbl_matricula` (
 
 INSERT INTO `tbl_matricula` (`id`, `id_estudiante`, `id_seccion`, `id_periodo`, `anno`, `estado`, `fecha_matricula`) VALUES
 (1, 1, 3, 1, '2026', 'activo', NULL),
-(7, 6, 4, 1, '2026', 'activo', NULL);
+(7, 6, 4, 1, '2026', 'activo', NULL),
+(8, 7, 5, 1, '2026', 'activo', NULL);
 
 -- --------------------------------------------------------
 
@@ -642,6 +727,20 @@ CREATE TABLE `tbl_notificacion` (
   `leido` tinyint(1) DEFAULT 0,
   `fecha` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `tbl_opcion_respuesta`
+--
+
+CREATE TABLE `tbl_opcion_respuesta` (
+  `id` int(11) NOT NULL,
+  `id_pregunta` int(11) NOT NULL,
+  `texto` text NOT NULL,
+  `es_correcta` tinyint(1) DEFAULT 0,
+  `orden` int(11) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -677,7 +776,26 @@ INSERT INTO `tbl_persona` (`id`, `id_usuario`, `primer_nombre`, `segundo_nombre`
 (7, 11, 'Dony', '', '', 'Navas', '', '01000000-0', '1979-07-05', 'M', 'Salvadoreña', '', '', '69386007', 'donyhenry@gmail.com', 'activo'),
 (8, 14, 'Henry', '', '', 'Navas', '', '01200000-0', '1979-07-05', 'M', 'Salvadoreña', '', '', '69386007', 'docente@docente.com', 'activo'),
 (10, 15, 'Profesor', NULL, '', 'Sistema', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'profesor@educacionplus.local', 'activo'),
-(14, 23, 'Henry', '', '', 'Navas 2026', '', '', '0000-00-00', '', 'Salvadoreña', '', '', '', '', 'activo');
+(14, 23, 'Henry', '', '', 'Navas 2026', '', '', '0000-00-00', '', 'Salvadoreña', '', '', '', '', 'activo'),
+(15, 24, 'Edgar', '', '', 'Quintanilla', '', '', '0000-00-00', '', 'Salvadoreña', '', '', '', '', 'activo'),
+(16, NULL, 'Super', NULL, '', 'Admin', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'activo');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `tbl_pregunta_examen`
+--
+
+CREATE TABLE `tbl_pregunta_examen` (
+  `id` int(11) NOT NULL,
+  `id_examen` int(11) NOT NULL,
+  `numero_orden` int(11) NOT NULL,
+  `tipo` enum('opcion_multiple','verdadero_falso','completar','relacionar','respuesta_corta','ensayo') NOT NULL,
+  `enunciado` text NOT NULL,
+  `puntaje` decimal(5,2) DEFAULT 1.00,
+  `imagen_url` varchar(500) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -690,17 +808,18 @@ CREATE TABLE `tbl_profesor` (
   `id_persona` int(11) DEFAULT NULL,
   `estado` varchar(250) NOT NULL,
   `especialidad` varchar(100) DEFAULT NULL,
-  `titulo_academico` varchar(100) DEFAULT NULL
+  `titulo_academico` varchar(100) DEFAULT NULL,
+  `id_institucion` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `tbl_profesor`
 --
 
-INSERT INTO `tbl_profesor` (`id`, `id_persona`, `estado`, `especialidad`, `titulo_academico`) VALUES
-(1, 7, '', 'Informatica', 'Ingeniero'),
-(2, 8, '', 'Estudios Sociales', 'Tecnico en Informatica'),
-(3, 10, '1', 'General', 'Licenciatura');
+INSERT INTO `tbl_profesor` (`id`, `id_persona`, `estado`, `especialidad`, `titulo_academico`, `id_institucion`) VALUES
+(1, 7, '', 'Informatica', 'Ingeniero', NULL),
+(2, 8, '', 'Estudios Sociales', 'Tecnico en Informatica', NULL),
+(3, 10, '1', 'General', 'Licenciatura', NULL);
 
 -- --------------------------------------------------------
 
@@ -733,6 +852,21 @@ CREATE TABLE `tbl_responsable` (
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `tbl_respuesta_estudiante`
+--
+
+CREATE TABLE `tbl_respuesta_estudiante` (
+  `id` int(11) NOT NULL,
+  `id_intento` int(11) NOT NULL,
+  `id_pregunta` int(11) NOT NULL,
+  `respuesta` text DEFAULT NULL,
+  `es_correcta` tinyint(1) DEFAULT NULL,
+  `puntaje_obtenido` decimal(5,2) DEFAULT 0.00
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `tbl_seccion`
 --
 
@@ -751,7 +885,8 @@ CREATE TABLE `tbl_seccion` (
 INSERT INTO `tbl_seccion` (`id`, `nombre`, `id_grado`, `id_institucion`, `anno_lectivo`) VALUES
 (2, 'A', 1, 1, '2026'),
 (3, 'A', 2, 1, '2026'),
-(4, 'B', 4, 1, '2026');
+(4, 'B', 4, 1, '2026'),
+(5, 'D', 5, 1, '2026');
 
 -- --------------------------------------------------------
 
@@ -765,26 +900,29 @@ CREATE TABLE `tbl_usuario` (
   `usuario` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
   `email` varchar(250) NOT NULL,
-  `rol` enum('admin','director','profesor','estudiante','responsable') NOT NULL,
+  `rol` enum('admin','director','profesor','estudiante','superadmin') DEFAULT NULL,
   `estado` tinyint(1) DEFAULT 1,
   `ultimo_acceso` datetime DEFAULT NULL,
   `fecha_registro` datetime NOT NULL DEFAULT current_timestamp(),
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `id_institucion` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `tbl_usuario`
 --
 
-INSERT INTO `tbl_usuario` (`id`, `nombre`, `usuario`, `password`, `email`, `rol`, `estado`, `ultimo_acceso`, `fecha_registro`, `created_at`) VALUES
-(2, '', 'estudiante', '$2y$10$tCD1tGFprC2D34zVOBthO.o2otGrvhqxUVJmZ0e94Pd.UTnce1Dya', '', 'estudiante', 1, '2026-03-16 22:10:57', '2026-04-07 20:23:53', '2026-03-17 04:11:35'),
-(10, '', 'dhnavas', '$2y$10$p.FRDWRed4q4IvQ8SPiZCeav17m/cRGXplibC8wx2kCIY60g7UmDC', '', 'estudiante', 1, NULL, '2026-04-07 20:23:53', '2026-03-30 23:53:11'),
-(11, '', 'profesor@profesor.com', '$2y$10$bYXz/SYyqEFUnUVM1sn7lOXj3mC7WAdhFcGg/nSAJ2XVUA1MjvcYK', '', 'profesor', 1, NULL, '2026-04-07 20:23:53', '2026-03-31 02:38:54'),
-(14, '', 'docente1', '$2y$10$gyOk0NXN8xRD2bA4T3a1Mu2muGUPJUa8g3y8BgRKXNdU0O5QjfB82', '', 'profesor', 1, NULL, '2026-04-07 20:23:53', '2026-03-31 16:27:02'),
-(15, 'Dony Navas', 'teacher', '$2y$10$6Mdsjb13lOQFD67D8rmLS.ONNa0HZ0p6qY4.yAG54F9hy2zHeNzc.', 'teacher@educacionplus.com', 'profesor', 1, NULL, '2026-04-07 20:23:53', '2026-04-02 20:09:22'),
-(16, '', 'admin', '$2y$10$f6wkJjBHDOLN32wDDVKeS.A76v9XOQC5oalTx9O3TPgJvHQj4fV8i', 'admin@educacionplus.com', 'admin', 1, NULL, '2026-04-07 20:24:17', '2026-04-08 02:24:17'),
-(17, '', 'henry', '$2y$10$ihUuS0Cp9Y.eH8qyNv1RjufSNAa2slbNeOhYqev28FcWqZAyS8CfC', 'henry10@educaplus.com', 'estudiante', 1, NULL, '2026-04-07 21:25:26', '2026-04-08 03:25:26'),
-(23, 'Henry Navas 2026', 'henry2026', '$2y$10$VKDhSJSIplLLjyLHfHMrte6F6vyNVflwbvPJ1lymOLBgUs2R7fH8K', '', 'estudiante', 1, NULL, '2026-04-14 12:26:40', '2026-04-14 18:26:40');
+INSERT INTO `tbl_usuario` (`id`, `nombre`, `usuario`, `password`, `email`, `rol`, `estado`, `ultimo_acceso`, `fecha_registro`, `created_at`, `id_institucion`) VALUES
+(2, '', 'estudiante', '$2y$10$tCD1tGFprC2D34zVOBthO.o2otGrvhqxUVJmZ0e94Pd.UTnce1Dya', '', 'estudiante', 1, '2026-03-16 22:10:57', '2026-04-07 20:23:53', '2026-03-17 04:11:35', 1),
+(10, '', 'dhnavas', '$2y$10$p.FRDWRed4q4IvQ8SPiZCeav17m/cRGXplibC8wx2kCIY60g7UmDC', '', 'estudiante', 1, NULL, '2026-04-07 20:23:53', '2026-03-30 23:53:11', 1),
+(11, '', 'profesor@profesor.com', '$2y$10$bYXz/SYyqEFUnUVM1sn7lOXj3mC7WAdhFcGg/nSAJ2XVUA1MjvcYK', '', 'profesor', 1, NULL, '2026-04-07 20:23:53', '2026-03-31 02:38:54', 1),
+(14, '', 'docente1', '$2y$10$gyOk0NXN8xRD2bA4T3a1Mu2muGUPJUa8g3y8BgRKXNdU0O5QjfB82', '', 'profesor', 1, NULL, '2026-04-07 20:23:53', '2026-03-31 16:27:02', 1),
+(15, 'Dony Navas', 'teacher', '$2y$10$6Mdsjb13lOQFD67D8rmLS.ONNa0HZ0p6qY4.yAG54F9hy2zHeNzc.', 'teacher@educacionplus.com', 'profesor', 1, NULL, '2026-04-07 20:23:53', '2026-04-02 20:09:22', 1),
+(16, '', 'admin', '$2y$10$f6wkJjBHDOLN32wDDVKeS.A76v9XOQC5oalTx9O3TPgJvHQj4fV8i', 'admin@educacionplus.com', 'admin', 1, NULL, '2026-04-07 20:24:17', '2026-04-08 02:24:17', 1),
+(17, '', 'henry', '$2y$10$ihUuS0Cp9Y.eH8qyNv1RjufSNAa2slbNeOhYqev28FcWqZAyS8CfC', 'henry10@educaplus.com', 'estudiante', 1, NULL, '2026-04-07 21:25:26', '2026-04-08 03:25:26', 1),
+(23, 'Henry Navas 2026', 'henry2026', '$2y$10$VKDhSJSIplLLjyLHfHMrte6F6vyNVflwbvPJ1lymOLBgUs2R7fH8K', '', 'estudiante', 1, NULL, '2026-04-14 12:26:40', '2026-04-14 18:26:40', 1),
+(24, 'Edgar Quintanilla', 'edgar', '$2y$10$SCE4TZo9lRTltI34x95xJum1zM75DWJJ00oLJzzYr7epSSffDlz42', '', 'estudiante', 1, NULL, '2026-05-02 10:42:39', '2026-05-02 16:42:39', 1),
+(25, 'Dony', 'super', '$2y$10$1SGuZyAMe0rjUDOd1mj8COyWPCPsYtWrttO.0/zMMUOYqNgIKbd2u', 'super@admin.com', 'superadmin', 1, NULL, '2026-05-02 20:41:20', '2026-05-03 02:41:20', 2);
 
 --
 -- Índices para tablas volcadas
@@ -861,6 +999,14 @@ ALTER TABLE `tbl_calendario_evaluacion`
   ADD KEY `id_asignacion_docente` (`id_asignacion_docente`);
 
 --
+-- Indices de la tabla `tbl_chat_clase`
+--
+ALTER TABLE `tbl_chat_clase`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_usuario` (`id_usuario`),
+  ADD KEY `idx_asig` (`id_asignacion`);
+
+--
 -- Indices de la tabla `tbl_config_examen`
 --
 ALTER TABLE `tbl_config_examen`
@@ -889,6 +1035,13 @@ ALTER TABLE `tbl_estudiante`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `nie` (`nie`),
   ADD KEY `id_persona` (`id_persona`);
+
+--
+-- Indices de la tabla `tbl_examen`
+--
+ALTER TABLE `tbl_examen`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_asignacion_docente` (`id_asignacion_docente`);
 
 --
 -- Indices de la tabla `tbl_foro`
@@ -973,7 +1126,17 @@ ALTER TABLE `tbl_ingles_vocabulario`
 -- Indices de la tabla `tbl_institucion`
 --
 ALTER TABLE `tbl_institucion`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `subdominio` (`subdominio`);
+
+--
+-- Indices de la tabla `tbl_intento_examen`
+--
+ALTER TABLE `tbl_intento_examen`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_examen` (`id_examen`),
+  ADD KEY `id_matricula` (`id_matricula`),
+  ADD KEY `idx_estudiante` (`id_estudiante`,`id_examen`);
 
 --
 -- Indices de la tabla `tbl_logs_actividad`
@@ -999,11 +1162,25 @@ ALTER TABLE `tbl_notificacion`
   ADD KEY `id_destinatario` (`id_destinatario`);
 
 --
+-- Indices de la tabla `tbl_opcion_respuesta`
+--
+ALTER TABLE `tbl_opcion_respuesta`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_pregunta` (`id_pregunta`);
+
+--
 -- Indices de la tabla `tbl_persona`
 --
 ALTER TABLE `tbl_persona`
   ADD PRIMARY KEY (`id`),
   ADD KEY `id_usuario` (`id_usuario`);
+
+--
+-- Indices de la tabla `tbl_pregunta_examen`
+--
+ALTER TABLE `tbl_pregunta_examen`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_examen` (`id_examen`);
 
 --
 -- Indices de la tabla `tbl_profesor`
@@ -1028,6 +1205,14 @@ ALTER TABLE `tbl_responsable`
   ADD KEY `id_persona` (`id_persona`);
 
 --
+-- Indices de la tabla `tbl_respuesta_estudiante`
+--
+ALTER TABLE `tbl_respuesta_estudiante`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_pregunta` (`id_pregunta`),
+  ADD KEY `idx_intento` (`id_intento`);
+
+--
 -- Indices de la tabla `tbl_seccion`
 --
 ALTER TABLE `tbl_seccion`
@@ -1040,7 +1225,8 @@ ALTER TABLE `tbl_seccion`
 --
 ALTER TABLE `tbl_usuario`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `usuario` (`usuario`);
+  ADD UNIQUE KEY `usuario` (`usuario`),
+  ADD KEY `fk_usu_inst` (`id_institucion`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
@@ -1050,7 +1236,7 @@ ALTER TABLE `tbl_usuario`
 -- AUTO_INCREMENT de la tabla `tbl_actividad`
 --
 ALTER TABLE `tbl_actividad`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT de la tabla `tbl_asignacion_docente`
@@ -1062,7 +1248,7 @@ ALTER TABLE `tbl_asignacion_docente`
 -- AUTO_INCREMENT de la tabla `tbl_asignatura`
 --
 ALTER TABLE `tbl_asignatura`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `tbl_asistencia`
@@ -1101,6 +1287,12 @@ ALTER TABLE `tbl_calendario_evaluacion`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de la tabla `tbl_chat_clase`
+--
+ALTER TABLE `tbl_chat_clase`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `tbl_config_examen`
 --
 ALTER TABLE `tbl_config_examen`
@@ -1122,7 +1314,13 @@ ALTER TABLE `tbl_entrega_actividad`
 -- AUTO_INCREMENT de la tabla `tbl_estudiante`
 --
 ALTER TABLE `tbl_estudiante`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT de la tabla `tbl_examen`
+--
+ALTER TABLE `tbl_examen`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `tbl_foro`
@@ -1134,7 +1332,7 @@ ALTER TABLE `tbl_foro`
 -- AUTO_INCREMENT de la tabla `tbl_grado`
 --
 ALTER TABLE `tbl_grado`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `tbl_ingles_asignacion`
@@ -1194,19 +1392,25 @@ ALTER TABLE `tbl_ingles_vocabulario`
 -- AUTO_INCREMENT de la tabla `tbl_institucion`
 --
 ALTER TABLE `tbl_institucion`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT de la tabla `tbl_intento_examen`
+--
+ALTER TABLE `tbl_intento_examen`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `tbl_logs_actividad`
 --
 ALTER TABLE `tbl_logs_actividad`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=148;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=159;
 
 --
 -- AUTO_INCREMENT de la tabla `tbl_matricula`
 --
 ALTER TABLE `tbl_matricula`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `tbl_notificacion`
@@ -1215,10 +1419,22 @@ ALTER TABLE `tbl_notificacion`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de la tabla `tbl_opcion_respuesta`
+--
+ALTER TABLE `tbl_opcion_respuesta`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `tbl_persona`
 --
 ALTER TABLE `tbl_persona`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+--
+-- AUTO_INCREMENT de la tabla `tbl_pregunta_examen`
+--
+ALTER TABLE `tbl_pregunta_examen`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `tbl_profesor`
@@ -1239,16 +1455,22 @@ ALTER TABLE `tbl_responsable`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de la tabla `tbl_respuesta_estudiante`
+--
+ALTER TABLE `tbl_respuesta_estudiante`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `tbl_seccion`
 --
 ALTER TABLE `tbl_seccion`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `tbl_usuario`
 --
 ALTER TABLE `tbl_usuario`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- Restricciones para tablas volcadas
@@ -1308,6 +1530,13 @@ ALTER TABLE `tbl_calendario_evaluacion`
   ADD CONSTRAINT `tbl_calendario_evaluacion_ibfk_1` FOREIGN KEY (`id_asignacion_docente`) REFERENCES `tbl_asignacion_docente` (`id`);
 
 --
+-- Filtros para la tabla `tbl_chat_clase`
+--
+ALTER TABLE `tbl_chat_clase`
+  ADD CONSTRAINT `tbl_chat_clase_ibfk_1` FOREIGN KEY (`id_asignacion`) REFERENCES `tbl_asignacion_docente` (`id`),
+  ADD CONSTRAINT `tbl_chat_clase_ibfk_2` FOREIGN KEY (`id_usuario`) REFERENCES `tbl_usuario` (`id`);
+
+--
 -- Filtros para la tabla `tbl_config_examen`
 --
 ALTER TABLE `tbl_config_examen`
@@ -1331,6 +1560,12 @@ ALTER TABLE `tbl_entrega_actividad`
 --
 ALTER TABLE `tbl_estudiante`
   ADD CONSTRAINT `tbl_estudiante_ibfk_1` FOREIGN KEY (`id_persona`) REFERENCES `tbl_persona` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `tbl_examen`
+--
+ALTER TABLE `tbl_examen`
+  ADD CONSTRAINT `tbl_examen_ibfk_1` FOREIGN KEY (`id_asignacion_docente`) REFERENCES `tbl_asignacion_docente` (`id`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `tbl_foro`
@@ -1376,6 +1611,14 @@ ALTER TABLE `tbl_ingles_progreso`
   ADD CONSTRAINT `tbl_ingles_progreso_ibfk_2` FOREIGN KEY (`id_leccion`) REFERENCES `tbl_ingles_leccion` (`id`) ON DELETE CASCADE;
 
 --
+-- Filtros para la tabla `tbl_intento_examen`
+--
+ALTER TABLE `tbl_intento_examen`
+  ADD CONSTRAINT `tbl_intento_examen_ibfk_1` FOREIGN KEY (`id_examen`) REFERENCES `tbl_examen` (`id`),
+  ADD CONSTRAINT `tbl_intento_examen_ibfk_2` FOREIGN KEY (`id_estudiante`) REFERENCES `tbl_estudiante` (`id`),
+  ADD CONSTRAINT `tbl_intento_examen_ibfk_3` FOREIGN KEY (`id_matricula`) REFERENCES `tbl_matricula` (`id`);
+
+--
 -- Filtros para la tabla `tbl_logs_actividad`
 --
 ALTER TABLE `tbl_logs_actividad`
@@ -1396,10 +1639,22 @@ ALTER TABLE `tbl_notificacion`
   ADD CONSTRAINT `tbl_notificacion_ibfk_2` FOREIGN KEY (`id_destinatario`) REFERENCES `tbl_usuario` (`id`);
 
 --
+-- Filtros para la tabla `tbl_opcion_respuesta`
+--
+ALTER TABLE `tbl_opcion_respuesta`
+  ADD CONSTRAINT `tbl_opcion_respuesta_ibfk_1` FOREIGN KEY (`id_pregunta`) REFERENCES `tbl_pregunta_examen` (`id`) ON DELETE CASCADE;
+
+--
 -- Filtros para la tabla `tbl_persona`
 --
 ALTER TABLE `tbl_persona`
   ADD CONSTRAINT `tbl_persona_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `tbl_usuario` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `tbl_pregunta_examen`
+--
+ALTER TABLE `tbl_pregunta_examen`
+  ADD CONSTRAINT `tbl_pregunta_examen_ibfk_1` FOREIGN KEY (`id_examen`) REFERENCES `tbl_examen` (`id`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `tbl_profesor`
@@ -1421,11 +1676,24 @@ ALTER TABLE `tbl_responsable`
   ADD CONSTRAINT `tbl_responsable_ibfk_1` FOREIGN KEY (`id_persona`) REFERENCES `tbl_persona` (`id`) ON DELETE CASCADE;
 
 --
+-- Filtros para la tabla `tbl_respuesta_estudiante`
+--
+ALTER TABLE `tbl_respuesta_estudiante`
+  ADD CONSTRAINT `tbl_respuesta_estudiante_ibfk_1` FOREIGN KEY (`id_intento`) REFERENCES `tbl_intento_examen` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `tbl_respuesta_estudiante_ibfk_2` FOREIGN KEY (`id_pregunta`) REFERENCES `tbl_pregunta_examen` (`id`);
+
+--
 -- Filtros para la tabla `tbl_seccion`
 --
 ALTER TABLE `tbl_seccion`
   ADD CONSTRAINT `tbl_seccion_ibfk_1` FOREIGN KEY (`id_grado`) REFERENCES `tbl_grado` (`id`),
   ADD CONSTRAINT `tbl_seccion_ibfk_2` FOREIGN KEY (`id_institucion`) REFERENCES `tbl_institucion` (`id`);
+
+--
+-- Filtros para la tabla `tbl_usuario`
+--
+ALTER TABLE `tbl_usuario`
+  ADD CONSTRAINT `fk_usu_inst` FOREIGN KEY (`id_institucion`) REFERENCES `tbl_institucion` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
