@@ -1,6 +1,6 @@
 <?php
 session_start();
-require '../config/database.php';
+require '../config/db_global.php'; // ← Usa conexión global, NO tenant
 
 // Si ya es superadmin, redirigir
 if (isset($_SESSION['rol']) && $_SESSION['rol'] === 'superadmin') {
@@ -13,10 +13,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $usuario = $_POST['usuario'];
     $password = $_POST['password'];
 
-    $db = (new Database())->getConnection();
+    $db = (new DatabaseGlobal())->getConnection();
     
-    // Buscar usuario global (no filtramos por institución para superadmins)
-    // Asumimos que los superadmins tienen id_institucion = 0 o NULL
+    // Buscar usuario superadmin (sin filtro de institución)
     $stmt = $db->prepare("SELECT * FROM tbl_usuario WHERE usuario = ? AND rol = 'superadmin'");
     $stmt->execute([$usuario]);
     $user = $stmt->fetch();
