@@ -8,38 +8,41 @@ class TenantManager {
      * Detecta la institución basándose en el subdominio
      */
     public static function resolve($db) {
-        // Si ya se resolvió, no volver a consultar
-        if (self::$currentTenant) return self::$currentTenant;
+    if (self::$currentTenant) return self::$currentTenant;
 
-        // 1. Obtener el host (ej: colegioA.localhost)
-        $host = $_SERVER['HTTP_HOST'];
-        $parts = explode('.', $host);
-        $subdomain = $parts[0];
+    $host = $_SERVER['HTTP_HOST'];
+    $parts = explode('.', $host);
+    $subdomain = $parts[0];
 
-        // Si es localhost directo, usamos 'localhost' como subdominio por defecto para pruebas
-        if ($subdomain === 'localhost' || $subdomain === '127.0.0.1') {
-            $subdomain = 'localhost'; 
+    // Si es localhost o IP directa, permitir acceso sin institución
+    if ($subdomain === 'localhost' || $subdomain === '127.0.0.1') {
+        // Solo requerir institución si NO es página de bienvenida o login
+        $currentPage = basename($_SERVER['PHP_SELF']);
+        if (!in_array($currentPage, ['welcome.php', 'login.php', 'index.php'])) {
+            // Redirigir a welcome si intenta acceder a otra página sin subdominio
+            header("Location: welcome.php");
+            exit;
         }
-
-        // 2. Buscar en la base de datos
-        try {
-            $stmt = $db->prepare("SELECT * FROM tbl_institucion WHERE subdominio = :sub");
-            $stmt->execute([':sub' => $subdomain]);
-            $tenant = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($tenant) {
-                self::$currentTenant = $tenant;
-            } else {
-                // Si no encuentra la institución, detiene la carga para evitar errores de datos mezclados
-                die("Error: Institución no encontrada para el subdominio '$subdomain'. <br>Por favor, configura tu archivo hosts o crea la institución en la base de datos.");
-            }
-        } catch (Exception $e) {
-            die("Error de conexión al detectar institución: " . $e->getMessage());
-        }
-
-        return self::$currentTenant;
+        self::$currentTenant = null;
+        return null;
     }
 
+    try {
+        $stmt = $db->prepare("SELECT * FROM tbl_institucion WHERE subdominio = :sub");
+        $stmt->execute([':sub' => $subdomain]);
+        $tenant = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$tenant) {
+            die("Error: Institución no encontrada para el subdominio '$subdomain'.");
+        }
+        
+        self::$currentTenant = $tenant;
+    } catch (Exception $e) {
+        self::$currentTenant = null;
+    }
+
+    return self::$currentTenant;
+}
     /**
      * Retorna el ID de la institución actual
      */
